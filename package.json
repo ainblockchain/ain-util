@@ -1,0 +1,23 @@
+{
+  "name": "@aindev/ain-util",
+  "version": "1.0.0",
+  "description": "A collection of utility functions for AI Network (AIN). ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ainblockchain/ain-util.git"
+  },
+  "keywords": [
+    "AIN",
+    "AI Network"
+  ],
+  "author": "AIN Dev Team",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/ainblockchain/ain-util/issues"
+  },
+  "homepage": "https://github.com/ainblockchain/ain-util#readme"
+}

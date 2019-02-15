@@ -1,2 +1,2 @@
 # ain-util
-AIN utility
+A collection of utility functions for AI Network (AIN).
