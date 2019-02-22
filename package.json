@@ -1,23 +1,34 @@
 {
   "name": "@ainblockchain/ain-util",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A collection of utility functions for AI Network (AIN). ",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "build-prod": "tsc -p ./tsconfig.prod.json"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ainblockchain/ain-util.git"
   },
   "keywords": [
-    "AIN",
-    "AI Network"
+    "ainetwork",
+    "ain",
+    "utilities"
   ],
   "author": "AIN Dev Team",
   "license": "MPL-2.0",
   "bugs": {
     "url": "https://github.com/ainblockchain/ain-util/issues"
   },
-  "homepage": "https://github.com/ainblockchain/ain-util#readme"
+  "homepage": "https://github.com/ainblockchain/ain-util#readme",
+  "dependencies": {
+    "@types/node": "^11.9.4",
+    "safe-buffer": "^5.1.2"
+  }
 }
