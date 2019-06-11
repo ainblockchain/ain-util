@@ -12,38 +12,38 @@ const TX_FIELDS = [{
     name: 'nonce',
     length: 32,
     allowLess: true,
-    default: new Buffer([])
+    default: Buffer.from([])
   },
   {
     name: 'to',
     allowZero: true,
     length: 20,
-    default: new Buffer([])
+    default: Buffer.from([])
   }, {
     name: 'value',
     length: 32,
     allowLess: true,
-    default: new Buffer([])
+    default: Buffer.from([])
   }, {
     name: 'data',
     allowZero: true,
-    default: new Buffer([])
+    default: Buffer.from([])
   }, {
     name: 'v',
     allowZero: true,
-    default: new Buffer([0x1c])
+    default: Buffer.from([0x1c])
   }, {
     name: 'r',
     length: 32,
     allowZero: true,
     allowLess: true,
-    default: new Buffer([])
+    default: Buffer.from([])
   }, {
     name: 's',
     length: 32,
     allowZero: true,
     allowLess: true,
-    default: new Buffer([])
+    default: Buffer.from([])
   }]
 
 export interface ECDSASignature {
@@ -480,7 +480,7 @@ function ecSplitSig(signature: Buffer): ECDSASignature {
 function intToBuffer(i: number): Buffer {
   var hex = intToHex(i)
 
-  return new Buffer(padToEven(hex.slice(2)), 'hex')
+  return Buffer.from(padToEven(hex.slice(2)), 'hex')
 }
 
 /**
