@@ -367,7 +367,7 @@ export const toBuffer = function(v: any): Buffer {
         v = Buffer.from(v)
       }
     } else if (typeof v === 'number') {
-      v = intToBuffer(v)
+      v = numToBuffer(v)
     } else if (v === null || v === undefined) {
       v = Buffer.allocUnsafe(0)
     } else if (BN.isBN(v)) {
@@ -473,14 +473,31 @@ function ecSplitSig(signature: Buffer): ECDSASignature {
 }
 
 /**
- * Converts an `Number` to a `Buffer`
+ * Converts a float `Number` to a `Buffer`
+ * @param {Number} i
+ * @return {Buffer}
+ */
+function floatToBuffer(i: number): Buffer {
+  return Buffer.from(new Uint8Array(new Float64Array([i]).buffer,0,8), 'hex');
+}
+
+/**
+ * Converts an integer `Number` to a `Buffer`
  * @param {Number} i
  * @return {Buffer}
  */
 function intToBuffer(i: number): Buffer {
-  var hex = intToHex(i)
+  var hex = intToHex(i);
+  return Buffer.from(padToEven(hex.slice(2)), 'hex');
+}
 
-  return Buffer.from(padToEven(hex.slice(2)), 'hex')
+/**
+ * Converts a `Number` to a `Buffer`
+ * @param {Number} i
+ * @return {Buffer}
+ */
+function numToBuffer(i: number): Buffer {
+  return Number.isInteger(i) ? intToBuffer(i) : floatToBuffer(i);
 }
 
 /**
