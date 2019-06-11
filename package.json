@@ -1,6 +1,6 @@
 {
   "name": "@ainblockchain/ain-util",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A collection of utility functions for AI Network (AIN). ",
   "main": "dist/index.js",
   "types": "./dist/index.d.ts",
