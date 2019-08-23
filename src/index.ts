@@ -473,6 +473,17 @@ function ecSplitSig(signature: Buffer): ECDSASignature {
 }
 
 /**
+ * Returns the public key of a given private key.
+ * @param {Buffer} privateKey A private key must be 256 bits wide
+ * @return {Buffer}
+ */
+export const privateToPublic = function(privateKey: Buffer): Buffer {
+  privateKey = toBuffer(privateKey);
+  // skip the type flag and use the X, Y points
+  return secp256k1.publicKeyCreate(privateKey, false).slice(1);
+}
+
+/**
  * Converts a float `Number` to a `Buffer`
  * @param {Number} i
  * @return {Buffer}

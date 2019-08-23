@@ -2,6 +2,7 @@ const assert = require('assert')
 const utils = require('../dist/index.js')
 const BN = require('bn.js')
 const {
+  address,
   pk,
   sk,
   echash,
@@ -167,6 +168,11 @@ describe('hex prefix', function () {
   })
 })
 
+describe('privateToPublic', function() {
+  it('should get the corresponding public key', function() {
+    assert.deepEqual(utils.privateToPublic(sk), pk)
+  })
+})
 
 describe('toBuffer', function () {
   it('should work', function () {
@@ -222,13 +228,13 @@ describe('ecSignMessage', function() {
 
 describe('ecVerifySig', function() {
   it('should return true for a correct signature', function() {
-    const verified = utils.ecVerifySig(message, correct_signature, pk)
+    const verified = utils.ecVerifySig(message, correct_signature, address)
     assert.equal(verified, true)
   })
 
   it('should return false for a corrupt signature', function() {
     let corrupt_signature = '0x2'+correct_signature.substring(3,correct_signature.length)
-    const verified = utils.ecVerifySig(message, corrupt_signature, pk)
+    const verified = utils.ecVerifySig(message, corrupt_signature, address)
     assert.equal(verified, false)
   })
 
@@ -238,7 +244,7 @@ describe('ecVerifySig', function() {
   })
 
   it('should return false for a different message', function() {
-    const verified = utils.ecVerifySig('Hello World', correct_signature, pk)
+    const verified = utils.ecVerifySig('Hello World', correct_signature, address)
     assert.equal(verified, false)
   })
 })
