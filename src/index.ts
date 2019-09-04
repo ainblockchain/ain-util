@@ -4,6 +4,7 @@ import { encode as encodeVarInt } from 'varuint-bitcoin'
 import assert from 'assert'
 const createKeccakHash = require('keccak')
 const secp256k1 = require('secp256k1')
+import { encrypt, decrypt } from 'eccrypto';
 const Buffer = require('safe-buffer').Buffer
 const SIGNED_MESSAGE_PREFIX = 'AINetwork Signed Message:\n'
 const SIGNED_MESSAGE_PREFIX_BYTES = Buffer.from(SIGNED_MESSAGE_PREFIX, 'utf8')
@@ -58,6 +59,13 @@ export interface Field {
   allowLess?: boolean,
   allowZero?: boolean,
   default: any
+}
+
+export interface Encrypted {
+  iv: string,
+  ephemPublicKey: string,
+  ciphertext: string,
+  mac: string
 }
 
 /**
@@ -196,7 +204,10 @@ export const isValidPrivate = function(privateKey: Buffer): boolean {
  * @param {boolean} isSEC1 Accept public keys in other formats
  * @returns {boolean}
  */
-export const isValidPublic = function(publicKey: Buffer, isSEC1: boolean = false): boolean {
+export const isValidPublic = function(
+  publicKey: Buffer,
+  isSEC1: boolean = false
+): boolean {
   if (publicKey.length === 64) {
     // Convert to SEC1 for secp256k1
     return secp256k1.publicKeyVerify(Buffer.concat([Buffer.from([4]), publicKey]))
@@ -225,12 +236,26 @@ export const keccak = function(input: any, bits: number = 256): Buffer {
 }
 
 /**
+ * Returns the public key of a given private key.
+ * @param {Buffer} privateKey A private key must be 256 bits wide
+ * @return {Buffer}
+ */
+export const privateToPublic = function(privateKey: Buffer): Buffer {
+  privateKey = toBuffer(privateKey);
+  // skip the type flag and use the X, Y points
+  return secp256k1.publicKeyCreate(privateKey, false).slice(1);
+}
+
+/**
  * Returns the AI Network address of a given public key.
  * @param {Buffer} publicKey AIN public key | SEC1 encoded public key
  * @param {boolean} isSEC1 Key is SEC1 encoded
  * @returns {Buffer} lower 160 bits of the hash of `publicKey`
  */
-export const pubToAddress = function(publicKey: Buffer, isSEC1: boolean = false): Buffer {
+export const pubToAddress = function(
+  publicKey: Buffer,
+  isSEC1: boolean = false
+): Buffer {
   publicKey = toBuffer(publicKey)
   if (isSEC1 && publicKey.length !== 64) {
     publicKey = secp256k1.publicKeyConvert(publicKey, false).slice(1)
@@ -254,7 +279,7 @@ export const pubToAddress = function(publicKey: Buffer, isSEC1: boolean = false)
      _fields = TX_FIELDS
    }
 
-   let input = []
+   let input: Buffer[] = []
 
    if (typeof data === 'string') {
     data = Buffer.from(stripHexPrefix(data), 'hex')
@@ -403,11 +428,92 @@ export const toChecksumAddress = function(address: string): string {
   return ret
 }
 
+/**
+ * Encrypt message with publicKey.
+ * @param {string} publicKey
+ * @param {string} message
+ * @returns {Encrypted}
+ */
+export const encryptWithPublicKey = function(
+  publicKey: string,
+  message: string
+): Promise<Encrypted> {
+  // ensure its an uncompressed publicKey
+  publicKey = decompress(publicKey)
+  // re-add the compression-flag
+  const pubString = '04' + publicKey
+
+  return encrypt(Buffer.from(pubString, 'hex'), Buffer.from(message))
+    .then(encryptedBuffers => {
+      const encrypted = {
+          iv: encryptedBuffers.iv.toString('hex'),
+          ephemPublicKey: encryptedBuffers.ephemPublicKey.toString('hex'),
+          ciphertext: encryptedBuffers.ciphertext.toString('hex'),
+          mac: encryptedBuffers.mac.toString('hex')
+        }
+      return encrypted
+    })
+}
+
+/**
+ * Decrypt encrypted data with privateKey
+ * @param {string} privateKey
+ * @param {string} encrypted
+ * @returns {string}
+ */
+export const decryptWithPrivateKey = function(
+  privateKey: string,
+  encrypted: Encrypted | string
+): Promise<string> {
+  const parsed = parseEncryption(encrypted)
+  // remove trailing '0x' from privateKey
+  const twoStripped = removeTrailing0x(privateKey)
+  const encryptedBuffer = {
+      iv: Buffer.from(parsed.iv, 'hex'),
+      ephemPublicKey: Buffer.from(parsed.ephemPublicKey, 'hex'),
+      ciphertext: Buffer.from(parsed.ciphertext, 'hex'),
+      mac: Buffer.from(parsed.mac, 'hex')
+  }
+
+  return decrypt(Buffer.from(twoStripped, 'hex'), encryptedBuffer)
+    .then(decryptedBuffer => decryptedBuffer.toString())
+}
+
 
 
 // Internal functions
 
 
+
+function parseEncryption(encrypted: Encrypted | string): Encrypted {
+  if (typeof encrypted !== 'string') return encrypted
+  const buf = Buffer.from(encrypted, 'hex')
+  const parsed = {
+      iv: buf.toString('hex', 0, 16),
+      ephemPublicKey: buf.toString('hex', 16, 49),
+      mac: buf.toString('hex', 49, 81),
+      ciphertext: buf.toString('hex', 81, buf.length)
+    }
+  // decompress publicKey
+  parsed.ephemPublicKey = '04' + decompress(parsed.ephemPublicKey)
+  return parsed
+}
+
+function decompress(startsWith02Or03: string): string {
+  // if already decompressed an not has trailing 04
+  const testBuffer = Buffer.from(startsWith02Or03, 'hex')
+  if (testBuffer.length === 64) startsWith02Or03 = '04' + startsWith02Or03
+  let decompressed = secp256k1.publicKeyConvert(
+      Buffer.from(startsWith02Or03, 'hex'), false).toString('hex')
+  // remove trailing 04
+  decompressed = decompressed.substring(2)
+  return decompressed
+}
+
+function removeTrailing0x(str: string): string {
+  if (str.startsWith('0x')) return str.substring(2)
+  else return str
+}
 
 /**
  *
@@ -425,7 +531,7 @@ function ecRecoverPub(
   r: Buffer,
   s: Buffer,
   v: number,
-  chainId?: number,
+  chainId?: number
 ): Buffer {
   const signature = Buffer.concat([setLength(r, 32), setLength(s, 32)], 64)
   const recovery = calculateSigRecovery(v, chainId)
@@ -442,7 +548,7 @@ function ecRecoverPub(
 function ecSignHash(
   msgHash: Buffer,
   privateKey: Buffer,
-  chainId?: number,
+  chainId?: number
 ): ECDSASignature {
   const sig = secp256k1.sign(msgHash, privateKey)
   const recovery: number = sig.recovery
@@ -470,17 +576,6 @@ function ecSplitSig(signature: Buffer): ECDSASignature {
     r: buf.slice(0, 32),
     s: buf.slice(32, 64)
   }
-}
-
-/**
- * Returns the public key of a given private key.
- * @param {Buffer} privateKey A private key must be 256 bits wide
- * @return {Buffer}
- */
-export const privateToPublic = function(privateKey: Buffer): Buffer {
-  privateKey = toBuffer(privateKey);
-  // skip the type flag and use the X, Y points
-  return secp256k1.publicKeyCreate(privateKey, false).slice(1);
 }
 
 /**
@@ -518,7 +613,6 @@ function numToBuffer(i: number): Buffer {
  */
 function intToHex(i: number): string {
   var hex = i.toString(16) // eslint-disable-line
-
   return '0x' + hex
 }
 

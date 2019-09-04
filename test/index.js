@@ -248,3 +248,12 @@ describe('ecVerifySig', function() {
     assert.equal(verified, false)
   })
 })
+
+describe('encryption', function() {
+  it ('should encrypt and decrypt correctly', async function() {
+    const message = 'abcdefg'
+    const encrypted = await utils.encryptWithPublicKey(pk.toString('hex'), message)
+    const decrypted = await utils.decryptWithPrivateKey(sk.toString('hex'), encrypted)
+    assert.equal(message, decrypted)
+  })
+})
