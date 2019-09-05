@@ -5,6 +5,7 @@ import assert from 'assert'
 const createKeccakHash = require('keccak')
 const secp256k1 = require('secp256k1')
 import { encrypt, decrypt } from 'eccrypto';
+const stringify = require('fast-json-stable-stringify');
 const Buffer = require('safe-buffer').Buffer
 const SIGNED_MESSAGE_PREFIX = 'AINetwork Signed Message:\n'
 const SIGNED_MESSAGE_PREFIX_BYTES = Buffer.from(SIGNED_MESSAGE_PREFIX, 'utf8')
@@ -48,9 +49,9 @@ const TX_FIELDS = [{
   }]
 
 export interface ECDSASignature {
-  v: number
   r: Buffer
   s: Buffer
+  v: number
 }
 
 export interface Field {
@@ -66,6 +67,13 @@ export interface Encrypted {
   ephemPublicKey: string,
   ciphertext: string,
   mac: string
+}
+
+export interface TransactionBody {
+  nonce: number,
+  from: string,
+  operation: any,
+  parent_tx_hash?: string
 }
 
 /**
@@ -86,8 +94,6 @@ export const bufferToHex = function(buf: Buffer): string {
   buf = toBuffer(buf)
   return '0x' + buf.toString('hex')
 }
-
-// TODO: decrypt(ciphertext, privateKey)
 
 /**
  * Signs a message with a private key and returns a `string` signature.
@@ -113,44 +119,95 @@ export const ecSignMessage = function(
 }
 
 /**
+ * ECDSA public key recovery from signature.
+ * @returns Recovered public key
+ */
+export const ecRecoverPub = function(
+  msgHash: Buffer,
+  r: Buffer,
+  s: Buffer,
+  v: number,
+  chainId?: number
+): Buffer {
+  const signature = Buffer.concat([setLength(r, 32), setLength(s, 32)], 64)
+  const recovery = calculateSigRecovery(v, chainId)
+  if (!isValidSigRecovery(recovery)) {
+    throw new Error('[ain-util] ecRecoverPub: Invalid signature v value')
+  }
+  const senderPubKey = secp256k1.recover(msgHash, signature, recovery)
+  return secp256k1.publicKeyConvert(senderPubKey, false)
+}
+
+/**
+ * Convert signature format of the `eth_sign` RPC method to signature parameters
+ */
+export const ecSplitSig = function(signature: Buffer): ECDSASignature {
+  const buf: Buffer = toBuffer(signature)
+  if (buf.length !== 65) {
+    throw new Error('[ain-util] ecSplitSig: Invalid signature length')
+  }
+
+  return {
+    r: buf.slice(0, 32),
+    s: buf.slice(32, 64),
+    v: buf[64]
+  }
+}
+
+/**
  * Checks if the signature is valid.
- * @param {Buffer|Array|string|number} message
- * @param {string} signature signature of the `message`
- * @param {string} publicKey
+ * @param {Buffer|Array|string|number} data
+ * @param {string} signature signature of the `data`
+ * @param {string} address
  * @param {number} chainId
  * @returns {boolean}
  */
 export const ecVerifySig = function(
-  message: any,
+  data: any,
   signature: string,
-  publicKey: string,
+  address: string,
   chainId?: number
 ): boolean {
   const sigBuffer = toBuffer(signature)
   const len = sigBuffer.length
   const lenHash = len - 65
-  const hashedMsg = sigBuffer.slice(0, lenHash)
-  if (!hashedMsg.equals(hashMessage(message))) {
-    return false
+  const hashedData = sigBuffer.slice(0, lenHash)
+  if (typeof data === 'object' && isTransactionBody(data)) {
+    if (!hashedData.equals(hashTransaction(data))) return false
+  } else {
+    if (!hashedData.equals(hashMessage(data))) return false
   }
 
   const sig = ecSplitSig(sigBuffer.slice(lenHash, len))
-  const pub = ecRecoverPub(hashedMsg, sig.r, sig.s, sig.v, chainId)
-  if (!secp256k1.verify(hashedMsg, sigBuffer.slice(lenHash, len-1), toBuffer(pub))) {
+  const pub = ecRecoverPub(hashedData, sig.r, sig.s, sig.v, chainId)
+  if (!secp256k1.verify(hashedData, sigBuffer.slice(lenHash, len-1), toBuffer(pub))) {
     return false
   }
 
   const addr = bufferToHex(pubToAddress(pub.slice(1)))
-  if (toChecksumAddress(publicKey) === toChecksumAddress(addr)) {
-    return true
-  } else {
-    return false
-  }
+  return toChecksumAddress(address) === toChecksumAddress(addr)
 }
 
-// TODO: ecSignTransaction(txData, privateKey, chainId?)
+export const ecSignTransaction = function(
+  txData: TransactionBody,
+  privateKey: Buffer,
+  chainId?: number
+): string {
+  const hashedTx = hashTransaction(txData)
+  const signature = ecSignHash(hashedTx, privateKey, chainId)
 
-// TODO: encrypt(plaintext, publicKey)
+  return bufferToHex(Buffer.concat([
+    toBuffer(hashedTx),
+    setLength(signature.r, 32),
+    setLength(signature.s, 32),
+    toBuffer(signature.v)
+  ]))
+}
+
+export const hashTransaction = function(transaction: TransactionBody | string): Buffer {
+  const tx = typeof transaction === 'string' ? transaction : stringify(transaction)
+  return keccak(keccak(tx))
+}
 
 /**
  * Returns the bitcoin's varint encoding of keccak-256 hash of `message`,
@@ -264,6 +321,7 @@ export const pubToAddress = function(
   return keccak(publicKey).slice(-20)
 }
 
+// TODO: deprecate this method (serialize)
 /**
  * Serialize an object (e.g. tx data) using rlp encoding.
  * @param {string|Buffer|Array|Object} data
@@ -523,26 +581,6 @@ function calculateSigRecovery(v: number, chainId?: number): number {
 }
 
 /**
- * ECDSA public key recovery from signature.
- * @returns Recovered public key
- */
-function ecRecoverPub(
-  msgHash: Buffer,
-  r: Buffer,
-  s: Buffer,
-  v: number,
-  chainId?: number
-): Buffer {
-  const signature = Buffer.concat([setLength(r, 32), setLength(s, 32)], 64)
-  const recovery = calculateSigRecovery(v, chainId)
-  if (!isValidSigRecovery(recovery)) {
-    throw new Error('[ain-util] ecRecoverPub: Invalid signature v value')
-  }
-  const senderPubKey = secp256k1.recover(msgHash, signature, recovery)
-  return secp256k1.publicKeyConvert(senderPubKey, false)
-}
-
-/**
  * Returns the ECDSA signature of a message hash.
  */
 function ecSignHash(
@@ -562,20 +600,14 @@ function ecSignHash(
   return ret
 }
 
-/**
- * Convert signature format of the `eth_sign` RPC method to signature parameters
- */
-function ecSplitSig(signature: Buffer): ECDSASignature {
-  const buf: Buffer = toBuffer(signature)
-  if (buf.length !== 65) {
-    throw new Error('[ain-util] ecSplitSig: Invalid signature length')
+function isTransactionBody(obj: object | string): obj is TransactionBody {
+  let _obj: object;
+  if (typeof obj === 'string') {
+    _obj = JSON.parse(obj)
+  } else {
+    _obj = obj;
   }
-
-  return {
-    v: buf[64],
-    r: buf.slice(0, 32),
-    s: buf.slice(32, 64)
-  }
+  return 'nonce' in _obj && 'from' in _obj && 'operation' in _obj
 }
 
 /**

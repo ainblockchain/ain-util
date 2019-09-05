@@ -10,7 +10,10 @@ const {
   chainId,
   checksumAddresses,
   message,
-  correct_signature
+  correct_signature,
+  tx,
+  tx_scrambled,
+  tx_different
 } = require('./test_data.js')
 
 describe('keccak', function () {
@@ -203,6 +206,16 @@ describe('toBuffer', function () {
   })
 })
 
+describe('hashTransaction', function() {
+  it('should produce a deterministic hash', function() {
+    const tx_hash = utils.hashTransaction(tx)
+    const scrambled_hash = utils.hashTransaction(tx_scrambled)
+    const different_hash = utils.hashTransaction(tx_different)
+    assert.deepEqual(tx_hash, scrambled_hash)
+    assert.notDeepEqual(tx_hash, different_hash)
+  })
+})
+
 describe('hashMessage', function () {
   it('should produce a deterministic hash', function () {
     const h = utils.hashMessage(Buffer.from('Hello world'))
@@ -219,10 +232,17 @@ describe('toChecksumAddress', function () {
   })
 })
 
+describe('ecSignTransaction', function() {
+  it('should return a signature for a transaction for AI Network', function() {
+    const signature = utils.ecSignTransaction(tx, sk)
+    assert.equal(utils.ecVerifySig(tx, signature, address), true)
+  })
+})
+
 describe('ecSignMessage', function() {
   it('should return a signature for a message', function() {
     const signature = utils.ecSignMessage(message, sk)
-    assert.equal(signature, correct_signature)
+    assert.equal(utils.ecVerifySig(message, signature, address), true)
   })
 })
 
