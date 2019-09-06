@@ -71,7 +71,6 @@ export interface Encrypted {
 
 export interface TransactionBody {
   nonce: number,
-  from: string,
   operation: any,
   parent_tx_hash?: string
 }
@@ -607,7 +606,7 @@ function isTransactionBody(obj: object | string): obj is TransactionBody {
   } else {
     _obj = obj;
   }
-  return 'nonce' in _obj && 'from' in _obj && 'operation' in _obj
+  return 'nonce' in _obj && 'operation' in _obj
 }
 
 /**
