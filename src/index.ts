@@ -55,23 +55,24 @@ export interface ECDSASignature {
 }
 
 export interface Field {
-  name: string,
-  length?: number,
-  allowLess?: boolean,
-  allowZero?: boolean,
+  name: string
+  length?: number
+  allowLess?: boolean
+  allowZero?: boolean
   default: any
 }
 
 export interface Encrypted {
-  iv: string,
-  ephemPublicKey: string,
-  ciphertext: string,
+  iv: string
+  ephemPublicKey: string
+  ciphertext: string
   mac: string
 }
 
 export interface TransactionBody {
-  nonce: number,
-  operation: any,
+  operation: any
+  nonce: number
+  timestamp: number
   parent_tx_hash?: string
 }
 
@@ -606,7 +607,8 @@ function isTransactionBody(obj: object | string): obj is TransactionBody {
   } else {
     _obj = obj;
   }
-  return 'nonce' in _obj && 'operation' in _obj
+
+  return 'nonce' in _obj && 'timestamp' in _obj && 'operation' in _obj
 }
 
 /**
