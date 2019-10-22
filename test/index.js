@@ -270,10 +270,18 @@ describe('ecVerifySig', function() {
 })
 
 describe('encryption', function() {
-  it ('should encrypt and decrypt correctly', async function() {
+  it('should encrypt and decrypt correctly', async function() {
     const message = 'abcdefg'
     const encrypted = await utils.encryptWithPublicKey(pk.toString('hex'), message)
     const decrypted = await utils.decryptWithPrivateKey(sk.toString('hex'), encrypted)
     assert.equal(message, decrypted)
   })
+})
+
+describe('generateAccount', function() {
+  it('should generate a new account', async function() {
+    const account = utils.generateAccount()
+    const publicKey = utils.privateToPublic(Buffer.from(account.private_key, 'hex')).toString('hex')
+    assert.equal(account.public_key, publicKey)
+  });
 })
