@@ -278,9 +278,9 @@ describe('encryption', function() {
   })
 })
 
-describe('generateAccount', function() {
-  it('should generate a new account', async function() {
-    const account = utils.generateAccount()
+describe('createAccount', function() {
+  it('should create a new account', async function() {
+    const account = utils.createAccount()
     const publicKey = utils.privateToPublic(Buffer.from(account.private_key, 'hex')).toString('hex')
     assert.equal(account.public_key, publicKey)
   });

@@ -545,11 +545,11 @@ export const decryptWithPrivateKey = function(
 }
 
 /**
- * Generates an account with a given entropy
+ * Creates an account with a given entropy
  * @param {string} entropy
  * @return {Account}
  */
-export const generateAccount = function(entropy?: string): Account {
+export const createAccount = function(entropy?: string): Account {
   const innerHex = keccak(concatHexPrefixed(randomBytes(32), !!entropy ? Buffer.from(entropy) : randomBytes(32)));
   const middleHex = concatHexPrefixed(concatHexPrefixed(randomBytes(32), innerHex), randomBytes(32));
   const privateKey = keccak(middleHex);
