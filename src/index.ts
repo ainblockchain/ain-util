@@ -1,12 +1,13 @@
-import BN from 'bn.js'
-import * as rlp from 'rlp'
-import { encode as encodeVarInt } from 'varuint-bitcoin'
-import assert from 'assert'
-const createKeccakHash = require('keccak')
-const secp256k1 = require('secp256k1')
+import BN from 'bn.js';
+import * as rlp from 'rlp';
+import { encode as encodeVarInt } from 'varuint-bitcoin';
+import assert from 'assert';
+const createKeccakHash = require('keccak');
+const secp256k1 = require('secp256k1');
 import { encrypt, decrypt } from 'eccrypto';
 const stringify = require('fast-json-stable-stringify');
-const Buffer = require('safe-buffer').Buffer
+const Buffer = require('safe-buffer').Buffer;
+const randomBytes = require('randombytes');
 const SIGNED_MESSAGE_PREFIX = 'AINetwork Signed Message:\n'
 const SIGNED_MESSAGE_PREFIX_BYTES = Buffer.from(SIGNED_MESSAGE_PREFIX, 'utf8')
 const SIGNED_MESSAGE_PREFIX_LENGTH = encodeVarInt(SIGNED_MESSAGE_PREFIX.length)
@@ -74,6 +75,12 @@ export interface TransactionBody {
   nonce: number
   timestamp: number
   parent_tx_hash?: string
+}
+
+export interface Account {
+  address: string;
+  private_key: string;
+  public_key: string;
 }
 
 /**
@@ -537,11 +544,30 @@ export const decryptWithPrivateKey = function(
     .then(decryptedBuffer => decryptedBuffer.toString())
 }
 
+/**
+ * Creates an account with a given entropy
+ * @param {string} entropy
+ * @return {Account}
+ */
+export const createAccount = function(entropy?: string): Account {
+  const innerHex = keccak(concatHexPrefixed(randomBytes(32), !!entropy ? Buffer.from(entropy) : randomBytes(32)));
+  const middleHex = concatHexPrefixed(concatHexPrefixed(randomBytes(32), innerHex), randomBytes(32));
+  const privateKey = keccak(middleHex);
+  const publicKey = privateToPublic(privateKey);
+  return {
+    address: toChecksumAddress(bufferToHex(pubToAddress(publicKey))),
+    private_key: privateKey.toString('hex'),
+    public_key: publicKey.toString('hex')
+  };
+}
 
 
 // Internal functions
 
 
+function concatHexPrefixed(a: Buffer, b: Buffer): Buffer {
+  return Buffer.concat([a, b.slice(2)]);
+}
 
 function parseEncryption(encrypted: Encrypted | string): Encrypted {
   if (typeof encrypted !== 'string') return encrypted
