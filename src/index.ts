@@ -294,10 +294,10 @@ export const isValidAddress = function(address: string): boolean {
 }
 
 /**
- *
- * @param
- * @param
- * @returns
+ * Checks if the two addresses are the same.
+ * @param {string} address1
+ * @param {string} address2
+ * @returns {boolean}
  */
  export const areSameAddresses = function(address1: string, address2: string): boolean {
    return toChecksumAddress(address1) === toChecksumAddress(address2);
