@@ -192,7 +192,7 @@ export const ecVerifySig = function(
   }
 
   const addr = bufferToHex(pubToAddress(pub.slice(1)))
-  return toChecksumAddress(address) === toChecksumAddress(addr)
+  return areSameAddresses(address, addr)
 }
 
 export const ecSignTransaction = function(
@@ -262,7 +262,7 @@ export const isValidPrivate = function(privateKey: Buffer): boolean {
 }
 
 /**
- * Checks where the `publicKey` is a valid public key (follows the rules of the
+ * Checks whether the `publicKey` is a valid public key (follows the rules of the
  * curve secp256k1 and meets the AIN requirements).
  * @param {Buffer} publicKey The two points of an uncompressed key, unless sanitize is enabled
  * @param {boolean} isSEC1 Accept public keys in other formats
@@ -283,6 +283,25 @@ export const isValidPublic = function(
 
   return secp256k1.publicKeyVerify(publicKey)
 }
+
+/**
+ * Checks if the address is valid.
+ * @param {string} address
+ * @returns {boolean}
+ */
+export const isValidAddress = function(address: string): boolean {
+  return /^0x[0-9a-fA-F]{40}$/.test(address)
+}
+
+/**
+ *
+ * @param
+ * @param
+ * @returns
+ */
+ export const areSameAddresses = function(address1: string, address2: string): boolean {
+   return toChecksumAddress(address1) === toChecksumAddress(address2);
+ }
 
 /**
  * Creates Keccak hash of the input
@@ -478,6 +497,9 @@ export const toBuffer = function(v: any): Buffer {
  * @returns {string}
  */
 export const toChecksumAddress = function(address: string): string {
+  if (!isValidAddress(address)) {
+    throw new Error('[ain-util] toChecksumAddress: Invalid address')
+  }
   address = stripHexPrefix(address).toLowerCase()
   const hash = keccak(address).toString('hex')
   let ret = '0x'

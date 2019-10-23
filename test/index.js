@@ -123,6 +123,25 @@ describe('isValidPublic', function () {
   })
 })
 
+describe('isValidAddress', function() {
+  it('should validate addresses correctly', function() {
+    assert.equal(utils.isValidAddress(address), true)
+    assert.equal(utils.isValidAddress(address.substring(1, address.length)), false)
+  })
+
+  it('should validate non-checksummed addresses', function() {
+    assert.equal(utils.isValidAddress('0x' + address.substring(2, address.length).toUpperCase()), true)
+    assert.equal(utils.isValidAddress(address.toLowerCase()), true)
+  })
+})
+
+describe('areSameAddresses', function() {
+  it('should correctly compare two addresses', function() {
+    assert.equal(utils.areSameAddresses(address, '0x' + address.substring(2, address.length).toUpperCase()), true)
+    assert.equal(utils.areSameAddresses(address, address.toLowerCase()), true)
+  })
+})
+
 describe('pubToAddress', function () {
   it('should produce an address given a public key', function () {
     const pubKey = Buffer.from('3a443d8381a6798a70c6ff9304bdc8cb0163c23211d11628fae52ef9e0dca11a001cf066d56a8156fc201cd5df8a36ef694eecd258903fca7086c1fae7441e1d', 'hex')
