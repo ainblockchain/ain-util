@@ -196,6 +196,34 @@ describe('privateToPublic', function() {
   })
 })
 
+describe('privateToAddress', function() {
+  it('should get the corresponding checksummed address', function() {
+    assert.equal(utils.privateToAddress(sk), address)
+  })
+})
+
+describe('privateToAccount', function() {
+  it('should get the corresponding account', function() {
+    assert.deepEqual(utils.privateToAccount(sk),
+        {private_key: sk.toString('hex'), public_key: pk.toString('hex'), address})
+  })
+})
+
+describe('V3Keystore', function() {
+  let keystore;
+  const pw = 'password'
+  const account = utils.privateToAccount(sk)
+  it('should create a V3Keystore from the private key', function() {
+    keystore = utils.privateToV3Keystore(sk, pw)
+    assert.deepEqual(utils.fromV3Keystore(keystore, pw), account)
+  })
+
+  it('should create a V3Keystore from the account', function() {
+    keystore = utils.accountToV3Keystore(account, pw)
+    assert.deepEqual(utils.fromV3Keystore(keystore, pw), account)
+  })
+})
+
 describe('toBuffer', function () {
   it('should work', function () {
     // Buffer
