@@ -722,7 +722,7 @@ export const v3KeystoreToPrivate = function(
   let json: V3Keystore = (typeof v3Keystore === 'string') ?
       JSON.parse(v3Keystore.toLowerCase()) : v3Keystore;
   if (json.version !== 3) {
-      throw new Error('[ain-util] fromV3Keystore: Not a valid V3 wallet');
+      throw new Error('[ain-util] v3KeystoreToPrivate: Not a valid V3 wallet');
   }
   let derivedKey: Buffer;
   let kdfparams: KdfParams;
@@ -739,7 +739,7 @@ export const v3KeystoreToPrivate = function(
   } else if (json.crypto.kdf === 'pbkdf2') {
     kdfparams = json.crypto.kdfparams;
     if (kdfparams.prf !== 'hmac-sha256') {
-      throw new Error('[ain-util] fromV3Keystore: Unsupported parameters to PBKDF2');
+      throw new Error('[ain-util] v3KeystoreToPrivate: Unsupported parameters to PBKDF2');
     }
     derivedKey = pbkdf2Sync(
         Buffer.from(password),
@@ -749,13 +749,13 @@ export const v3KeystoreToPrivate = function(
         'sha256'
       );
   } else {
-    throw new Error('[ain-util] fromV3Keystore: Unsupported key derivation scheme');
+    throw new Error('[ain-util] v3KeystoreToPrivate: Unsupported key derivation scheme');
   }
   const ciphertext = Buffer.from(json.crypto.ciphertext, 'hex');
   const mac = keccak(Buffer.concat([derivedKey.slice(16, 32), ciphertext]))
       .toString('hex').replace('0x', '');
   if (mac !== json.crypto.mac) {
-    throw new Error('[ain-util] fromV3Keystore: Key derivation failed - possibly wrong password');
+    throw new Error('[ain-util] v3KeystoreToPrivate: Key derivation failed - possibly wrong password');
   }
   const decipher = createDecipheriv(
       json.crypto.cipher,
