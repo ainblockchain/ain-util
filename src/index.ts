@@ -647,23 +647,7 @@ export const createAccount = function(entropy?: string): Account {
  * @return {V3Keystore}
  */
 export const privateToV3Keystore = function(
-  privateKey: Buffer,
-  password: string,
-  options: V3KeystoreOptions = {}
-): V3Keystore {
-  const account = privateToAccount(privateKey)
-  return accountToV3Keystore(account, password, options)
-}
-
-/**
- * Converts an account into a V3 Keystore and encrypts it with a password
- * @param {Account} account
- * @param {string} password
- * @param {V3KeystoreOptions} options
- * @return {V3Keystore}
- */
-export const accountToV3Keystore = function(
-    account: Account,
+    privateKey: Buffer,
     password: string,
     options: V3KeystoreOptions = {}
 ): V3Keystore {
@@ -702,15 +686,16 @@ export const accountToV3Keystore = function(
     throw new Error('[ain-util] accountToV3Keystore: Unsupported cipher');
   }
   const ciphertext = Buffer.concat([
-    cipher.update(Buffer.from(account.private_key.replace('0x', ''), 'hex')),
+    cipher.update(Buffer.from(privateKey, 'hex')),
     cipher.final()
   ]);
   const mac = keccak(Buffer.concat([derivedKey.slice(16, 32), ciphertext]))
       .toString('hex').replace('0x', '');
+  const address = privateToAddress(privateKey);
   return {
     version: 3,
     id: uuid.v4({random: options.uuid || randomBytes(16)}),
-    address: account.address.toLowerCase().replace('0x', ''),
+    address: address.toLowerCase().replace('0x', ''),
     crypto: {
       ciphertext: ciphertext.toString('hex'),
       cipherparams: {

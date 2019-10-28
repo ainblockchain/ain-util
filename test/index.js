@@ -217,11 +217,6 @@ describe('V3Keystore', function() {
     keystore = utils.privateToV3Keystore(sk, pw)
     assert.deepEqual(utils.fromV3Keystore(keystore, pw), account)
   })
-
-  it('should create a V3Keystore from the account', function() {
-    keystore = utils.accountToV3Keystore(account, pw)
-    assert.deepEqual(utils.fromV3Keystore(keystore, pw), account)
-  })
 })
 
 describe('toBuffer', function () {
