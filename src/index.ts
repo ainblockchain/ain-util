@@ -7,7 +7,11 @@ const secp256k1 = require('secp256k1');
 import { encrypt, decrypt } from 'eccrypto';
 const stringify = require('fast-json-stable-stringify');
 const Buffer = require('safe-buffer').Buffer;
+const scrypt = require('scryptsy');
+const pbkdf2Sync = require('pbkdf2');
 const randomBytes = require('randombytes');
+const { createCipheriv, createDecipheriv } = require('browserify-cipher');
+const uuid = require('uuid');
 const SIGNED_MESSAGE_PREFIX = 'AINetwork Signed Message:\n'
 const SIGNED_MESSAGE_PREFIX_BYTES = Buffer.from(SIGNED_MESSAGE_PREFIX, 'utf8')
 const SIGNED_MESSAGE_PREFIX_LENGTH = encodeVarInt(SIGNED_MESSAGE_PREFIX.length)
@@ -81,6 +85,46 @@ export interface Account {
   address: string;
   private_key: string;
   public_key: string;
+}
+
+export interface KdfParams {
+  dklen: number,
+  salt: string,
+  prf?: string,
+  c?: number,
+  n?: number,
+  r?: number,
+  p?: number
+}
+
+export interface V3KeystoreOptions {
+  salt?: string,
+  iv?: Buffer,
+  kdf?: string,
+  dklen?: number,
+  c?: number,
+  n?: number,
+  r?: number,
+  p?: number,
+  prf?: string,
+  cipher?: string,
+  uuid?: Buffer
+}
+
+export interface V3Keystore {
+  version: 3,
+  id: string,
+  address: string,
+  crypto: {
+    ciphertext: string,
+    cipherparams: {
+      iv: string
+    },
+    cipher: string,
+    kdf: string,
+    kdfparams: KdfParams,
+    mac: string
+  }
 }
 
 /**
@@ -347,6 +391,23 @@ export const pubToAddress = function(
   return keccak(publicKey).slice(-20)
 }
 
+export const privateToAddress = function(privateKey: Buffer): string {
+  return toChecksumAddress(bufferToHex(pubToAddress(privateToPublic(privateKey))))
+}
+
+/**
+ * Returns an Account with the given private key.
+ * @param {Buffer} privateKey
+ * @return {Account}
+ */
+export const privateToAccount = function(privateKey: Buffer): Account {
+  return {
+    address: privateToAddress(privateKey),
+    private_key: privateKey.toString('hex'),
+    public_key: privateToPublic(privateKey).toString('hex')
+  }
+}
+
 // TODO: deprecate this method (serialize)
 /**
  * Serialize an object (e.g. tx data) using rlp encoding.
@@ -575,12 +636,133 @@ export const createAccount = function(entropy?: string): Account {
   const innerHex = keccak(concatHexPrefixed(randomBytes(32), !!entropy ? Buffer.from(entropy) : randomBytes(32)));
   const middleHex = concatHexPrefixed(concatHexPrefixed(randomBytes(32), innerHex), randomBytes(32));
   const privateKey = keccak(middleHex);
-  const publicKey = privateToPublic(privateKey);
+  return privateToAccount(privateKey);
+}
+
+/**
+ * Converts an account into a V3 Keystore and encrypts it with a password
+ * @param {Buffer} privateKey
+ * @param {string} password
+ * @param {V3KeystoreOptions} options
+ * @return {V3Keystore}
+ */
+export const privateToV3Keystore = function(
+    privateKey: Buffer,
+    password: string,
+    options: V3KeystoreOptions = {}
+): V3Keystore {
+  const salt = options.salt || randomBytes(32);
+  const iv = options.iv || randomBytes(16);
+  let derivedKey: Buffer;
+  const kdf = options.kdf || 'scrypt';
+  const kdfparams: KdfParams = { dklen: options.dklen || 32, salt: salt.toString('hex') };
+  if (kdf === 'pbkdf2') {
+    kdfparams.c = options.c || 262144;
+    kdfparams.prf = 'hmac-sha256';
+    derivedKey = pbkdf2Sync(
+        Buffer.from(password),
+        Buffer.from(kdfparams.salt, 'hex'),
+        kdfparams.c,
+        kdfparams.dklen,
+        'sha256'
+      );
+  } else if (kdf === 'scrypt') {
+    kdfparams.n = options.n || 262144; // 2048 4096 8192 16384
+    kdfparams.r = options.r || 8;
+    kdfparams.p = options.p || 1;
+    derivedKey = scrypt(
+        Buffer.from(password),
+        Buffer.from(kdfparams.salt, 'hex'),
+        kdfparams.n,
+        kdfparams.r,
+        kdfparams.p,
+        kdfparams.dklen,
+      );
+  } else {
+    throw new Error('[ain-util] privateToV3Keystore: Unsupported kdf');
+  }
+  const cipher = createCipheriv(options.cipher || 'aes-128-ctr', derivedKey.slice(0, 16), iv);
+  if (!cipher) {
+    throw new Error('[ain-util] privateToV3Keystore: Unsupported cipher');
+  }
+  const ciphertext = Buffer.concat([
+    cipher.update(Buffer.from(privateKey, 'hex')),
+    cipher.final()
+  ]);
+  const mac = keccak(Buffer.concat([derivedKey.slice(16, 32), ciphertext]))
+      .toString('hex').replace('0x', '');
+  const address = privateToAddress(privateKey);
   return {
-    address: toChecksumAddress(bufferToHex(pubToAddress(publicKey))),
-    private_key: privateKey.toString('hex'),
-    public_key: publicKey.toString('hex')
+    version: 3,
+    id: uuid.v4({random: options.uuid || randomBytes(16)}),
+    address: address.toLowerCase().replace('0x', ''),
+    crypto: {
+      ciphertext: ciphertext.toString('hex'),
+      cipherparams: {
+        iv: iv.toString('hex')
+      },
+      cipher: options.cipher || 'aes-128-ctr',
+      kdf,
+      kdfparams,
+      mac
+    }
   };
+}
+
+/**
+ * Returns a private key from a V3 Keystore.
+ * @param {V3Keystore | string} v3Keystore
+ * @param {string} password
+ * @return {Buffer}
+ */
+export const v3KeystoreToPrivate = function(
+    v3Keystore: V3Keystore | string,
+    password: string
+): Buffer {
+  let json: V3Keystore = (typeof v3Keystore === 'string') ?
+      JSON.parse(v3Keystore.toLowerCase()) : v3Keystore;
+  if (json.version !== 3) {
+      throw new Error('[ain-util] v3KeystoreToPrivate: Not a valid V3 wallet');
+  }
+  let derivedKey: Buffer;
+  let kdfparams: KdfParams;
+  if (json.crypto.kdf === 'scrypt') {
+    kdfparams = json.crypto.kdfparams;
+    derivedKey = scrypt(
+        Buffer.from(password),
+        Buffer.from(kdfparams.salt, 'hex'),
+        kdfparams.n,
+        kdfparams.r,
+        kdfparams.p,
+        kdfparams.dklen
+      );
+  } else if (json.crypto.kdf === 'pbkdf2') {
+    kdfparams = json.crypto.kdfparams;
+    if (kdfparams.prf !== 'hmac-sha256') {
+      throw new Error('[ain-util] v3KeystoreToPrivate: Unsupported parameters to PBKDF2');
+    }
+    derivedKey = pbkdf2Sync(
+        Buffer.from(password),
+        Buffer.from(kdfparams.salt, 'hex'),
+        kdfparams.c,
+        kdfparams.dklen,
+        'sha256'
+      );
+  } else {
+    throw new Error('[ain-util] v3KeystoreToPrivate: Unsupported key derivation scheme');
+  }
+  const ciphertext = Buffer.from(json.crypto.ciphertext, 'hex');
+  const mac = keccak(Buffer.concat([derivedKey.slice(16, 32), ciphertext]))
+      .toString('hex').replace('0x', '');
+  if (mac !== json.crypto.mac) {
+    throw new Error('[ain-util] v3KeystoreToPrivate: Key derivation failed - possibly wrong password');
+  }
+  const decipher = createDecipheriv(
+      json.crypto.cipher,
+      derivedKey.slice(0, 16),
+      Buffer.from(json.crypto.cipherparams.iv, 'hex')
+    );
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 }
 
 
