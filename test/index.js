@@ -210,11 +210,10 @@ describe('privateToAccount', function() {
 })
 
 describe('V3Keystore', function() {
-  let keystore;
-  const pw = 'password'
-  const account = utils.privateToAccount(sk)
   it('should create a V3Keystore from the private key', function() {
-    keystore = utils.privateToV3Keystore(sk, pw)
+    const pw = 'password'
+    const account = utils.privateToAccount(sk)
+    let keystore = utils.privateToV3Keystore(sk, pw)
     assert.deepEqual(utils.fromV3Keystore(keystore, pw), account)
   })
 })

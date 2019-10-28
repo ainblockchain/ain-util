@@ -8,7 +8,7 @@
     "dist"
   ],
   "scripts": {
-    "test": "npm run build-prod && mocha",
+    "test": "npm run build-prod && mocha --timeout 40000",
     "build": "tsc",
     "build-prod": "tsc -p ./tsconfig.prod.json",
     "prepublishOnly": "npm test"

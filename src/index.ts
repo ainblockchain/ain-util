@@ -667,7 +667,7 @@ export const privateToV3Keystore = function(
         'sha256'
       );
   } else if (kdf === 'scrypt') {
-    kdfparams.n = options.n || 8192; // 2048 4096 8192 16384
+    kdfparams.n = options.n || 262144; // 2048 4096 8192 16384
     kdfparams.r = options.r || 8;
     kdfparams.p = options.p || 1;
     derivedKey = scrypt(
