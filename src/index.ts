@@ -710,14 +710,15 @@ export const privateToV3Keystore = function(
 }
 
 /**
- * Adds an account from a V3 Keystore.
+ * Returns a private key from a V3 Keystore.
  * @param {V3Keystore | string} v3Keystore
- * @param {string} [password]
+ * @param {string} password
+ * @return {Buffer}
  */
-export const fromV3Keystore = function(
+export const v3KeystoreToPrivate = function(
     v3Keystore: V3Keystore | string,
     password: string
-): Account {
+): Buffer {
   let json: V3Keystore = (typeof v3Keystore === 'string') ?
       JSON.parse(v3Keystore.toLowerCase()) : v3Keystore;
   if (json.version !== 3) {
@@ -761,8 +762,7 @@ export const fromV3Keystore = function(
       derivedKey.slice(0, 16),
       Buffer.from(json.crypto.cipherparams.iv, 'hex')
     );
-  const privateKey = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
-  return privateToAccount(privateKey);
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 }
 
 
