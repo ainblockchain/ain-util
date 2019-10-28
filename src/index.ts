@@ -679,11 +679,11 @@ export const privateToV3Keystore = function(
         kdfparams.dklen,
       );
   } else {
-    throw new Error('[ain-util] accountToV3Keystore: Unsupported kdf');
+    throw new Error('[ain-util] privateToV3Keystore: Unsupported kdf');
   }
   const cipher = createCipheriv(options.cipher || 'aes-128-ctr', derivedKey.slice(0, 16), iv);
   if (!cipher) {
-    throw new Error('[ain-util] accountToV3Keystore: Unsupported cipher');
+    throw new Error('[ain-util] privateToV3Keystore: Unsupported cipher');
   }
   const ciphertext = Buffer.concat([
     cipher.update(Buffer.from(privateKey, 'hex')),
