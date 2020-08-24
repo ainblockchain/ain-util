@@ -323,3 +323,35 @@ describe('createAccount', function() {
     assert.equal(account.public_key, publicKey)
   });
 })
+
+describe('encode', function() {
+  it('should encode illegal characters', function() {
+    assert.equal(utils.encode('/'), '!2F');
+    assert.equal(utils.encode('.'), '!2E');
+    assert.equal(utils.encode('$'), '!24');
+    assert.equal(utils.encode('*'), '!2A');
+    assert.equal(utils.encode('#'), '!23');
+    assert.equal(utils.encode('{'), '!7B');
+    assert.equal(utils.encode('}'), '!7D');
+    assert.equal(utils.encode('['), '!5B');
+    assert.equal(utils.encode(']'), '!5D');
+    assert.equal(utils.encode('!'), '!21');
+    assert.equal(utils.encode('/apps/afan'), '!2Fapps!2Fafan');
+  });
+})
+
+describe('decode', function() {
+  it('should decode encoded characters', function() {
+    assert.equal(utils.decode('!2F'), '/');
+    assert.equal(utils.decode('!2E'), '.');
+    assert.equal(utils.decode('!24'), '$');
+    assert.equal(utils.decode('!2A'), '*');
+    assert.equal(utils.decode('!23'), '#');
+    assert.equal(utils.decode('!7B'), '{');
+    assert.equal(utils.decode('!7D'), '}');
+    assert.equal(utils.decode('!5B'), '[');
+    assert.equal(utils.decode('!5D'), ']');
+    assert.equal(utils.decode('!21'), '!');
+    assert.equal(utils.decode('!2Fapps!2Fafan'), '/apps/afan');
+  });
+})
