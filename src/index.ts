@@ -767,7 +767,7 @@ export const v3KeystoreToPrivate = function(
 
 export function encode(key: string): string {
   return key.replace(/[\/\.\$\*#\{\}\[\]!]/g, (match) => {
-    return `!${match.charCodeAt(0).toString(16).toUpperCase()}`
+    return `!${match.charCodeAt(0).toString(16).toUpperCase()}`;
   });
 }
 
