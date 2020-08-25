@@ -765,6 +765,18 @@ export const v3KeystoreToPrivate = function(
   return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 }
 
+export function encode(key: string): string {
+  return key.replace(/[\/\.\$\*#\{\}\[\]!]/g, (match) => {
+    return `!${match.charCodeAt(0).toString(16).toUpperCase()}`;
+  });
+}
+
+export function decode(key: string): string {
+  return key.replace(/!([0-9a-f]{2})/gi, (match, code) => {
+    return String.fromCharCode(parseInt(code, 16));
+  });
+}
+
 
 // Internal functions
 
