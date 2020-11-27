@@ -1,5 +1,5 @@
 ---
-name: Ask a question
+name: "\U0001F914 Ask a question"
 about: Ask about this project
 title: ''
 labels: question
