@@ -55,10 +55,10 @@ Converts signature format of the `eth_sign` RPC method to signature parameters.
 Checks if the signature is valid.
 
 ### ecSignTransaction(txData: TransactionBody, privateKey: Buffer, chainId?: number) -> string
-
+Signs a transaction body with a private key and returns a `string` signature.
 
 ### hashTransaction(transaction: TransactionBody | string) -> Buffer
-
+Generates keccak hash using a transaction body.
 
 ### hashMessage(message: any) -> Buffer
 Returns the bitcoin's varint encoding of keccak-256 hash of `message`,
