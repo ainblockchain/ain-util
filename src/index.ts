@@ -20,8 +20,7 @@ const TX_FIELDS = [{
     length: 32,
     allowLess: true,
     default: Buffer.from([])
-  },
-  {
+  }, {
     name: 'to',
     allowZero: true,
     length: 20,
@@ -190,7 +189,9 @@ export const ecRecoverPub = function(
 }
 
 /**
- * Convert signature format of the `eth_sign` RPC method to signature parameters
+ * Converts signature format of the `eth_sign` RPC method to signature parameters.
+ * @param {Buffer} signature
+ * @returns {ECDSASignature}
  */
 export const ecSplitSig = function(signature: Buffer): ECDSASignature {
   const buf: Buffer = toBuffer(signature)
@@ -239,6 +240,13 @@ export const ecVerifySig = function(
   return areSameAddresses(address, addr)
 }
 
+/**
+ * Signs a transaction body with a private key and returns a `string` signature.
+ * @param {TransactionBody} txData
+ * @param {Buffer} privateKey
+ * @param {number} chainId
+ * @returns {string}
+ */
 export const ecSignTransaction = function(
   txData: TransactionBody,
   privateKey: Buffer,
@@ -255,6 +263,11 @@ export const ecSignTransaction = function(
   ]))
 }
 
+/**
+ * Generates keccak hash using a transaction body.
+ * @param {TransactionBody|string} transaction
+ * @returns {Buffer}
+ */
 export const hashTransaction = function(transaction: TransactionBody | string): Buffer {
   const tx = typeof transaction === 'string' ? transaction : stringify(transaction)
   return keccak(keccak(tx))
@@ -282,7 +295,7 @@ export const hashMessage = function(message: any): Buffer {
 }
 
 /**
- * Checks whether the `str` is prefixed with "0x"
+ * Checks whether the `str` is prefixed with "0x".
  * @param {string} str
  * @return {boolean}
  * @throws if the str input is not a string
@@ -348,7 +361,7 @@ export const isValidAddress = function(address: string): boolean {
  }
 
 /**
- * Creates Keccak hash of the input
+ * Creates Keccak hash of the input.
  * @param {Buffer|Array|string|number} input
  * @param {number} bits The Keccak width
  * @returns {Buffer}
@@ -507,7 +520,7 @@ export const setLength = function(
 }
 
 /**
- * Removes '0x' from a given `String` is present
+ * Removes '0x' from a given `String` is present.
  * @param {string} str the string value
  * @return {string}
  */
@@ -577,7 +590,7 @@ export const toChecksumAddress = function(address: string): string {
 }
 
 /**
- * Encrypt message with publicKey.
+ * Encrypts message with publicKey.
  * @param {string} publicKey
  * @param {string} message
  * @returns {Encrypted}
@@ -604,7 +617,7 @@ export const encryptWithPublicKey = function(
 }
 
 /**
- * Decrypt encrypted data with privateKey
+ * Decrypts encrypted data with privateKey.
  * @param {string} privateKey
  * @param {string} encrypted
  * @returns {string}
@@ -628,7 +641,7 @@ export const decryptWithPrivateKey = function(
 }
 
 /**
- * Creates an account with a given entropy
+ * Creates an account with a given entropy.
  * @param {string} entropy
  * @return {Account}
  */
@@ -640,16 +653,16 @@ export const createAccount = function(entropy?: string): Account {
 }
 
 /**
- * Converts an account into a V3 Keystore and encrypts it with a password
+ * Converts an account into a V3 Keystore and encrypts it with a password.
  * @param {Buffer} privateKey
  * @param {string} password
  * @param {V3KeystoreOptions} options
  * @return {V3Keystore}
  */
-export const privateToV3Keystore = function(
-    privateKey: Buffer,
-    password: string,
-    options: V3KeystoreOptions = {}
+export const privateToV3Keystore = function (
+  privateKey: Buffer,
+  password: string,
+  options: V3KeystoreOptions = {}
 ): V3Keystore {
   const salt = options.salt || randomBytes(32);
   const iv = options.iv || randomBytes(16);
@@ -716,8 +729,8 @@ export const privateToV3Keystore = function(
  * @return {Buffer}
  */
 export const v3KeystoreToPrivate = function(
-    v3Keystore: V3Keystore | string,
-    password: string
+  v3Keystore: V3Keystore | string,
+  password: string
 ): Buffer {
   let json: V3Keystore = (typeof v3Keystore === 'string') ?
       JSON.parse(v3Keystore.toLowerCase()) : v3Keystore;
@@ -789,11 +802,11 @@ function parseEncryption(encrypted: Encrypted | string): Encrypted {
   if (typeof encrypted !== 'string') return encrypted
   const buf = Buffer.from(encrypted, 'hex')
   const parsed = {
-      iv: buf.toString('hex', 0, 16),
-      ephemPublicKey: buf.toString('hex', 16, 49),
-      mac: buf.toString('hex', 49, 81),
-      ciphertext: buf.toString('hex', 81, buf.length)
-    }
+    iv: buf.toString('hex', 0, 16),
+    ephemPublicKey: buf.toString('hex', 16, 49),
+    mac: buf.toString('hex', 49, 81),
+    ciphertext: buf.toString('hex', 81, buf.length)
+  }
   // decompress publicKey
   parsed.ephemPublicKey = '04' + decompress(parsed.ephemPublicKey)
   return parsed
