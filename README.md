@@ -10,7 +10,7 @@ npm install @ainblockchain/ain-util
 ```
 
 ## Examples
-```
+```js
 const ainUtil = require('@ainblockchain/ain-util');
 
 const message = { foo: 'bar' };
@@ -130,7 +130,17 @@ Returns a private key from a V3 Keystore.
 ### decode(key: string) -> string
 
 
----
+## Environments
+Tested on the below environments.
+
+### node
+- v12.x.x
+- v10.x.x
+
+###
+- v6.x.x
+- v7.x.x
+
 
 ## LICENSE
 
