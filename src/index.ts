@@ -4,6 +4,7 @@ import { encode as encodeVarInt } from 'varuint-bitcoin';
 import assert from 'assert';
 const createKeccakHash = require('keccak');
 const secp256k1 = require('secp256k1');
+const HDkey = require('hdkey');
 import { mnemonicToSeedSync, validateMnemonic } from 'bip39';
 import { encrypt, decrypt } from 'eccrypto';
 const stringify = require('fast-json-stable-stringify');
@@ -427,7 +428,7 @@ export const privateToAccount = function(privateKey: Buffer): Account {
  * Returns a randomly generated mnemonic.
  * @return {string}
  */
- export { generateMnemonic } from 'bip39';
+export { generateMnemonic } from 'bip39';
 
 /**
  * Returns an private key with the given mnemonic.
@@ -435,7 +436,7 @@ export const privateToAccount = function(privateKey: Buffer): Account {
  * @param {number} index
  * @return {Buffer}
  */
- export const mnemonicToPrivatekey = function(mnemonic: string, index: number = 0): Buffer {
+export const mnemonicToPrivatekey = function(mnemonic: string, index: number = 0): Buffer {
   if (index < 0) {
     throw new Error('[ain-util] mnemonicToPrivatekey: index should be greater than 0');
   }
@@ -445,7 +446,6 @@ export const privateToAccount = function(privateKey: Buffer): Account {
   }
 
   const seed = mnemonicToSeedSync(mnemonic);
-  const HDkey = require('hdkey');
   const hdkey = HDkey.fromMasterSeed(seed);
   const path = AIN_HD_DERIVATION_PATH + index;
   const wallet = hdkey.derive(path);
@@ -459,7 +459,7 @@ export const privateToAccount = function(privateKey: Buffer): Account {
  * @param {number} index
  * @return {Account}
  */
- export const mnemonicToAccount = function(mnemonic: string, index: number = 0): Account {
+export const mnemonicToAccount = function(mnemonic: string, index: number = 0): Account {
   return privateToAccount(mnemonicToPrivatekey(mnemonic, index));
 }
 
