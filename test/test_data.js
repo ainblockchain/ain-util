@@ -4,6 +4,10 @@
 const address = '0xCAcD898dBaEdBD9037aCd25b82417587E972838d';
 const pk = Buffer.from('cf0ba8241cd1452c282c4dfa33d48e43ca34e60f5da9a2422293aa34ac14b018991d0cbc42089e4dcf3b3cc2907d51f06baed00cad7f855182572c77cbfad2b3', 'hex');
 const sk = Buffer.from('cef602325bc0882591e5768e94cd94a326947e8ee5d3b02fb29d1b89a9334d99', 'hex');
+const mnemonic = 'lab diesel rule gas student bulb menu option play habit ski result';
+const mnemonicPrivateKey = Buffer.from('1fa9d5e22aa39d264c7c939f99b47696cf534bead88e4ca81da767b1ed122fa8', 'hex');
+const mnemonicPublicKey = Buffer.from('6ab3e3c1d727fe72e06a6243a05ee6b1607c162a1696629ac9f19b0c1661d586554cadb17ea9d1ae246f60735f9d0e399c61139d7afef72de28809edb695990e', 'hex');
+const mnemonicAddress = '0xe402A6296233F2DfefE35cbC3203802965B4E4d7';
 const checksumAddresses = [
   '0x21fE266480080535b0CCe687669e5DBe13f42559',
   '0x32F9c01ab1247C9366C8A22B6929eB0A905dBBd1',
@@ -46,6 +50,10 @@ module.exports = {
   address,
   pk,
   sk,
+  mnemonic,
+  mnemonicPrivateKey,
+  mnemonicPublicKey,
+  mnemonicAddress,
   checksumAddresses,
   message,
   correct_signature,

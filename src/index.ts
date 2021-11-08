@@ -4,7 +4,7 @@ import { encode as encodeVarInt } from 'varuint-bitcoin';
 import assert from 'assert';
 const createKeccakHash = require('keccak');
 const secp256k1 = require('secp256k1');
-const bip39 = require('bip39');
+import { mnemonicToSeedSync, validateMnemonic } from 'bip39';
 import { encrypt, decrypt } from 'eccrypto';
 const stringify = require('fast-json-stable-stringify');
 const Buffer = require('safe-buffer').Buffer;
@@ -424,6 +424,12 @@ export const privateToAccount = function(privateKey: Buffer): Account {
 }
 
 /**
+ * Returns a randomly generated mnemonic.
+ * @return {string}
+ */
+ export { generateMnemonic } from 'bip39';
+
+/**
  * Returns an private key with the given mnemonic.
  * @param {string} mnemonic
  * @param {number} index
@@ -434,17 +440,17 @@ export const privateToAccount = function(privateKey: Buffer): Account {
     throw new Error('[ain-util] mnemonicToPrivatekey: index should be greater than 0');
   }
 
-  if (!bip39.validateMnemonic(mnemonic)) {
+  if (!validateMnemonic(mnemonic)) {
     throw new Error('[ain-util] mnemonicToPrivatekey: Invalid mnemonic');
   }
 
-  const seed = bip39.mnemonicToSeedSync(mnemonic);
+  const seed = mnemonicToSeedSync(mnemonic);
   const HDkey = require('hdkey');
   const hdkey = HDkey.fromMasterSeed(seed);
   const path = AIN_HD_DERIVATION_PATH + index;
   const wallet = hdkey.derive(path);
 
-  return wallet.privatekey;
+  return wallet.privateKey;
 }
 
 /**

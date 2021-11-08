@@ -5,6 +5,10 @@ const {
   address,
   pk,
   sk,
+  mnemonic,
+  mnemonicPrivateKey,
+  mnemonicPublicKey,
+  mnemonicAddress,
   checksumAddresses,
   message,
   correct_signature,
@@ -203,6 +207,19 @@ describe('privateToAccount', function() {
   it('should get the corresponding account', function() {
     assert.deepEqual(utils.privateToAccount(sk),
         {private_key: sk.toString('hex'), public_key: pk.toString('hex'), address})
+  })
+})
+
+describe('mnemonicToPrivatekey', function() {
+  it('should get the corresponding private key', function() {
+    assert.deepEqual(utils.mnemonicToPrivatekey(mnemonic), mnemonicPrivateKey);
+  })
+})
+
+describe('mnemonicToAccount', function() {
+  it('should get the corresponding account', function() {
+    assert.deepEqual(utils.mnemonicToAccount(mnemonic),
+        {private_key: mnemonicPrivateKey.toString('hex'), public_key: mnemonicPublicKey.toString('hex'), address: mnemonicAddress})
   })
 })
 
