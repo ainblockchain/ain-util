@@ -4,6 +4,8 @@ import { encode as encodeVarInt } from 'varuint-bitcoin';
 import assert from 'assert';
 const createKeccakHash = require('keccak');
 const secp256k1 = require('secp256k1');
+const HDkey = require('hdkey');
+import { mnemonicToSeedSync, validateMnemonic } from 'bip39';
 import { encrypt, decrypt } from 'eccrypto';
 const stringify = require('fast-json-stable-stringify');
 const Buffer = require('safe-buffer').Buffer;
@@ -12,6 +14,7 @@ const pbkdf2Sync = require('pbkdf2');
 const randomBytes = require('randombytes');
 const { createCipheriv, createDecipheriv } = require('browserify-cipher');
 const uuid = require('uuid');
+const AIN_HD_DERIVATION_PATH = "m/44'/412'/0'/0/";
 const SIGNED_MESSAGE_PREFIX = 'AINetwork Signed Message:\n'
 const SIGNED_MESSAGE_PREFIX_BYTES = Buffer.from(SIGNED_MESSAGE_PREFIX, 'utf8')
 const SIGNED_MESSAGE_PREFIX_LENGTH = encodeVarInt(SIGNED_MESSAGE_PREFIX.length)
@@ -419,6 +422,45 @@ export const privateToAccount = function(privateKey: Buffer): Account {
     private_key: privateKey.toString('hex'),
     public_key: privateToPublic(privateKey).toString('hex')
   }
+}
+
+/**
+ * Returns a randomly generated mnemonic.
+ * @return {string}
+ */
+export { generateMnemonic } from 'bip39';
+
+/**
+ * Returns an private key with the given mnemonic.
+ * @param {string} mnemonic
+ * @param {number} index
+ * @return {Buffer}
+ */
+export const mnemonicToPrivatekey = function(mnemonic: string, index: number = 0): Buffer {
+  if (index < 0) {
+    throw new Error('[ain-util] mnemonicToPrivatekey: index should be greater than 0');
+  }
+
+  if (!validateMnemonic(mnemonic)) {
+    throw new Error('[ain-util] mnemonicToPrivatekey: Invalid mnemonic');
+  }
+
+  const seed = mnemonicToSeedSync(mnemonic);
+  const hdkey = HDkey.fromMasterSeed(seed);
+  const path = AIN_HD_DERIVATION_PATH + index;
+  const wallet = hdkey.derive(path);
+
+  return wallet.privateKey;
+}
+
+/**
+ * Returns an Account with the given mnemonic.
+ * @param {string} mnemonic
+ * @param {number} index
+ * @return {Account}
+ */
+export const mnemonicToAccount = function(mnemonic: string, index: number = 0): Account {
+  return privateToAccount(mnemonicToPrivatekey(mnemonic, index));
 }
 
 // TODO: deprecate this method (serialize)
