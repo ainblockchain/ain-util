@@ -8,7 +8,7 @@
     "dist"
   ],
   "scripts": {
-    "test": "npm run build-prod && mocha --timeout 40000",
+    "test": "npm run build-prod && ./node_modules/.bin/mocha --timeout 40000",
     "build": "tsc",
     "build-prod": "tsc -p ./tsconfig.prod.json",
     "prepublishOnly": "npm test"
@@ -36,6 +36,7 @@
     "@babel/preset-typescript": "^7.3.3",
     "@types/bn.js": "^4.11.4",
     "@types/node": "^11.9.4",
+    "mocha": "^9.1.3",
     "typescript": "^3.3.3"
   },
   "dependencies": {
