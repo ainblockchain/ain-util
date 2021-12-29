@@ -837,7 +837,7 @@ export function decode(key: string): string {
 
 
 function concatHexPrefixed(a: Buffer, b: Buffer): Buffer {
-  return Buffer.concat([a, b.slice(2)]);
+  return Buffer.concat([a, b.slice(0, 2).equals(Buffer.from('0x')) ? b.slice(2) : b]);
 }
 
 function parseEncryption(encrypted: Encrypted | string): Encrypted {
