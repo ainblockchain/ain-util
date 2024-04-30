@@ -1,4 +1,5 @@
 const assert = require('assert')
+const { expect } = require("chai");
 const utils = require('../dist/index.js')
 const BN = require('bn.js')
 const {
@@ -321,6 +322,13 @@ describe('ecVerifySig', function() {
   it('should return false for a different message', function() {
     const verified = utils.ecVerifySig('Hello World', correct_signature, address)
     assert.equal(verified, false)
+  })
+
+  it('should return false for a wrong chainId', function() {
+    const t = () => {
+      const verified = utils.ecVerifySig(message, correct_signature, address, 1)  // with a wrong chainId = 1
+    }
+    expect(t).to.throw('[ain-util] ecRecoverPub: Invalid signature v value');
   })
 })
 
