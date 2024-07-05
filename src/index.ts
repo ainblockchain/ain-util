@@ -14,7 +14,11 @@ const pbkdf2Sync = require('pbkdf2');
 const randomBytes = require('randombytes');
 const { createCipheriv, createDecipheriv } = require('browserify-cipher');
 const uuid = require('uuid');
-const AIN_HD_DERIVATION_PATH = "m/44'/412'/0'/0/";
+// NOTE(platfowner): In AI Network, we decided to use Ethereum Network's
+//                   derivation path ("m/44'/60'/0'/0/") instead of
+//                   its own ("m/44'/412'/0'/0/").
+// const AIN_HD_DERIVATION_PATH = "m/44'/412'/0'/0/";
+const ETH_HD_DERIVATION_PATH = "m/44'/60'/0'/0/";
 const SIGNED_MESSAGE_PREFIX = 'AINetwork Signed Message:\n'
 const SIGNED_MESSAGE_PREFIX_BYTES = Buffer.from(SIGNED_MESSAGE_PREFIX, 'utf8')
 const SIGNED_MESSAGE_PREFIX_LENGTH = encodeVarInt(SIGNED_MESSAGE_PREFIX.length)
@@ -447,7 +451,7 @@ export const mnemonicToPrivatekey = function(mnemonic: string, index: number = 0
 
   const seed = mnemonicToSeedSync(mnemonic);
   const hdkey = HDkey.fromMasterSeed(seed);
-  const path = AIN_HD_DERIVATION_PATH + index;
+  const path = ETH_HD_DERIVATION_PATH + index;
   const wallet = hdkey.derive(path);
 
   return wallet.privateKey;
