@@ -451,8 +451,8 @@ export const mnemonicToPrivatekey = function(mnemonic: string, index: number = 0
 
   const seed = mnemonicToSeedSync(mnemonic);
   const hdkey = HDkey.fromMasterSeed(seed);
-  const derivationPath = chain === 'ETH' ? ETH_HD_DERIVATION_PATH : AIN_HD_DERIVATION_PATH;
-  const path = derivationPath + index;
+  const prefix = chain === 'ETH' ? ETH_HD_DERIVATION_PATH : AIN_HD_DERIVATION_PATH;
+  const path = prefix + index;
   const wallet = hdkey.derive(path);
 
   return wallet.privateKey;
