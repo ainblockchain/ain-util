@@ -14,10 +14,10 @@ const pbkdf2Sync = require('pbkdf2');
 const randomBytes = require('randombytes');
 const { createCipheriv, createDecipheriv } = require('browserify-cipher');
 const uuid = require('uuid');
-// NOTE(platfowner): In AI Network, we decided to use Ethereum Network's
-//                   derivation path ("m/44'/60'/0'/0/") instead of
+// NOTE(platfowner): In AI Network, we decided to use both Ethereum Network's
+//                   derivation path ("m/44'/60'/0'/0/") and
 //                   its own ("m/44'/412'/0'/0/").
-// const AIN_HD_DERIVATION_PATH = "m/44'/412'/0'/0/";
+const AIN_HD_DERIVATION_PATH = "m/44'/412'/0'/0/";
 const ETH_HD_DERIVATION_PATH = "m/44'/60'/0'/0/";
 const SIGNED_MESSAGE_PREFIX = 'AINetwork Signed Message:\n'
 const SIGNED_MESSAGE_PREFIX_BYTES = Buffer.from(SIGNED_MESSAGE_PREFIX, 'utf8')
@@ -440,7 +440,7 @@ export { generateMnemonic } from 'bip39';
  * @param {number} index
  * @return {Buffer}
  */
-export const mnemonicToPrivatekey = function(mnemonic: string, index: number = 0): Buffer {
+export const mnemonicToPrivatekey = function(mnemonic: string, index: number = 0, chain: string = 'AIN'): Buffer {
   if (index < 0) {
     throw new Error('[ain-util] mnemonicToPrivatekey: index should be greater than 0');
   }
@@ -451,7 +451,8 @@ export const mnemonicToPrivatekey = function(mnemonic: string, index: number = 0
 
   const seed = mnemonicToSeedSync(mnemonic);
   const hdkey = HDkey.fromMasterSeed(seed);
-  const path = ETH_HD_DERIVATION_PATH + index;
+  const prefix = chain === 'ETH' ? ETH_HD_DERIVATION_PATH : AIN_HD_DERIVATION_PATH;
+  const path = prefix + index;
   const wallet = hdkey.derive(path);
 
   return wallet.privateKey;
@@ -463,8 +464,8 @@ export const mnemonicToPrivatekey = function(mnemonic: string, index: number = 0
  * @param {number} index
  * @return {Account}
  */
-export const mnemonicToAccount = function(mnemonic: string, index: number = 0): Account {
-  return privateToAccount(mnemonicToPrivatekey(mnemonic, index));
+export const mnemonicToAccount = function(mnemonic: string, index: number = 0, chain: string = 'AIN'): Account {
+  return privateToAccount(mnemonicToPrivatekey(mnemonic, index, chain));
 }
 
 // TODO: deprecate this method (serialize)

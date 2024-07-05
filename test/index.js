@@ -7,9 +7,12 @@ const {
   pk,
   sk,
   mnemonic,
-  mnemonicPrivateKey,
-  mnemonicPublicKey,
-  mnemonicAddress,
+  mnemonicPrivateKeyAin,
+  mnemonicPublicKeyAin,
+  mnemonicAddressAin,
+  mnemonicPrivateKeyEth,
+  mnemonicPublicKeyEth,
+  mnemonicAddressEth,
   checksumAddresses,
   message,
   correct_signature,
@@ -211,16 +214,29 @@ describe('privateToAccount', function() {
   })
 })
 
-describe('mnemonicToPrivatekey', function() {
+describe('mnemonicToPrivatekey with AIN', function() {
   it('should get the corresponding private key', function() {
-    assert.deepEqual(utils.mnemonicToPrivatekey(mnemonic), mnemonicPrivateKey);
+    assert.deepEqual(utils.mnemonicToPrivatekey(mnemonic), mnemonicPrivateKeyAin);
   })
 })
 
-describe('mnemonicToAccount', function() {
+describe('mnemonicToAccount with AIN', function() {
   it('should get the corresponding account', function() {
     assert.deepEqual(utils.mnemonicToAccount(mnemonic),
-        {private_key: mnemonicPrivateKey.toString('hex'), public_key: mnemonicPublicKey.toString('hex'), address: mnemonicAddress})
+        {private_key: mnemonicPrivateKeyAin.toString('hex'), public_key: mnemonicPublicKeyAin.toString('hex'), address: mnemonicAddressAin})
+  })
+})
+
+describe('mnemonicToPrivatekey with ETH', function() {
+  it('should get the corresponding private key', function() {
+    assert.deepEqual(utils.mnemonicToPrivatekey(mnemonic, 0, 'ETH'), mnemonicPrivateKeyEth);
+  })
+})
+
+describe('mnemonicToAccount with ETH', function() {
+  it('should get the corresponding account', function() {
+    assert.deepEqual(utils.mnemonicToAccount(mnemonic, 0, 'ETH'),
+        {private_key: mnemonicPrivateKeyEth.toString('hex'), public_key: mnemonicPublicKeyEth.toString('hex'), address: mnemonicAddressEth})
   })
 })
 
