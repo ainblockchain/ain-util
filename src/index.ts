@@ -437,7 +437,8 @@ export { generateMnemonic } from 'bip39';
 /**
  * Returns an private key with the given mnemonic.
  * @param {string} mnemonic
- * @param {number} index
+ * @param {number} index of the account
+ * @param {string} chain to use the derivation path of
  * @return {Buffer}
  */
 export const mnemonicToPrivatekey = function(mnemonic: string, index: number = 0, chain: string = 'AIN'): Buffer {
@@ -461,7 +462,8 @@ export const mnemonicToPrivatekey = function(mnemonic: string, index: number = 0
 /**
  * Returns an Account with the given mnemonic.
  * @param {string} mnemonic
- * @param {number} index
+ * @param {number} index of the account
+ * @param {string} chain to use the derivation path of
  * @return {Account}
  */
 export const mnemonicToAccount = function(mnemonic: string, index: number = 0, chain: string = 'AIN'): Account {
