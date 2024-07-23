@@ -382,6 +382,7 @@ export const keccak = function(input: any, bits: number = 256): Buffer {
     .digest()
 }
 
+// TODO(platfowner): Consider replacing privateTo prefixes with privateKeyTo.
 /**
  * Returns the public key of a given private key.
  * @param {Buffer} privateKey A private key must be 256 bits wide
@@ -416,7 +417,7 @@ export const privateToAddress = function(privateKey: Buffer): string {
 }
 
 /**
- * Returns an Account with the given private key.
+ * Returns an account with the given private key.
  * @param {Buffer} privateKey
  * @return {Account}
  */
@@ -429,13 +430,44 @@ export const privateToAccount = function(privateKey: Buffer): Account {
 }
 
 /**
+ * Returns a private key with the given seed.
+ * @param {Buffer} seed
+ * @param {number} index of the account
+ * @param {string} chain to use the derivation path of
+ * @return {Buffer}
+ */
+export const seedToPrivatekey = function(seed: Buffer, index: number = 0, chain: string = 'AIN'): Buffer {
+  if (index < 0) {
+    throw new Error('[ain-util] seedToPrivatekey: index should be greater than 0');
+  }
+
+  const hdkey = HDkey.fromMasterSeed(seed);
+  const prefix = chain === 'ETH' ? ETH_HD_DERIVATION_PATH : AIN_HD_DERIVATION_PATH;
+  const path = prefix + index;
+  const wallet = hdkey.derive(path);
+
+  return wallet.privateKey;
+}
+
+/**
+ * Returns an account with the given seed.
+ * @param {Buffer} seed
+ * @param {number} index of the account
+ * @param {string} chain to use the derivation path of
+ * @return {Account}
+ */
+export const seedToAccount = function(seed: Buffer, index: number = 0, chain: string = 'AIN'): Account {
+  return privateToAccount(seedToPrivatekey(seed, index, chain));
+}
+
+/**
  * Returns a randomly generated mnemonic.
  * @return {string}
  */
 export { generateMnemonic } from 'bip39';
 
 /**
- * Returns an private key with the given mnemonic.
+ * Returns a private key with the given mnemonic.
  * @param {string} mnemonic
  * @param {number} index of the account
  * @param {string} chain to use the derivation path of
@@ -451,16 +483,12 @@ export const mnemonicToPrivatekey = function(mnemonic: string, index: number = 0
   }
 
   const seed = mnemonicToSeedSync(mnemonic);
-  const hdkey = HDkey.fromMasterSeed(seed);
-  const prefix = chain === 'ETH' ? ETH_HD_DERIVATION_PATH : AIN_HD_DERIVATION_PATH;
-  const path = prefix + index;
-  const wallet = hdkey.derive(path);
 
-  return wallet.privateKey;
+  return seedToPrivatekey(seed, index, chain);
 }
 
 /**
- * Returns an Account with the given mnemonic.
+ * Returns an account with the given mnemonic.
  * @param {string} mnemonic
  * @param {number} index of the account
  * @param {string} chain to use the derivation path of
