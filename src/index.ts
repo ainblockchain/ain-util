@@ -382,6 +382,7 @@ export const keccak = function(input: any, bits: number = 256): Buffer {
     .digest()
 }
 
+// TODO(platfowner): Consider replacing privateTo prefixes with privateKeyTo.
 /**
  * Returns the public key of a given private key.
  * @param {Buffer} privateKey A private key must be 256 bits wide
