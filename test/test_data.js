@@ -5,6 +5,7 @@ const address = '0xCAcD898dBaEdBD9037aCd25b82417587E972838d';
 const pk = Buffer.from('cf0ba8241cd1452c282c4dfa33d48e43ca34e60f5da9a2422293aa34ac14b018991d0cbc42089e4dcf3b3cc2907d51f06baed00cad7f855182572c77cbfad2b3', 'hex');
 const sk = Buffer.from('cef602325bc0882591e5768e94cd94a326947e8ee5d3b02fb29d1b89a9334d99', 'hex');
 const mnemonic = 'lab diesel rule gas student bulb menu option play habit ski result';
+const seed = Buffer.from('daa38d77e2ea868f25fb3a65b2ca83e7d08e8a16e05c45745f47a7d9d96442e38e1694cf5f18ce1cd66cc82019075b45078963314ee40ee04f7bf465af0d7982', 'hex');
 // NOTE(platfowner): In AI Network, we decided to use both Ethereum Network's
 //                   derivation path ("m/44'/60'/0'/0/") and
 //                   its own ("m/44'/412'/0'/0/").
@@ -57,6 +58,7 @@ module.exports = {
   pk,
   sk,
   mnemonic,
+  seed,
   mnemonicPrivateKeyAin,
   mnemonicPublicKeyAin,
   mnemonicAddressAin,

@@ -7,6 +7,7 @@ const {
   pk,
   sk,
   mnemonic,
+  seed,
   mnemonicPrivateKeyAin,
   mnemonicPublicKeyAin,
   mnemonicAddressAin,
@@ -211,6 +212,32 @@ describe('privateToAccount', function() {
   it('should get the corresponding account', function() {
     assert.deepEqual(utils.privateToAccount(sk),
         {private_key: sk.toString('hex'), public_key: pk.toString('hex'), address})
+  })
+})
+
+describe('seedToPrivatekey with AIN', function() {
+  it('should get the corresponding private key', function() {
+    assert.deepEqual(utils.seedToPrivatekey(seed), mnemonicPrivateKeyAin);
+  })
+})
+
+describe('seedToAccount with AIN', function() {
+  it('should get the corresponding account', function() {
+    assert.deepEqual(utils.seedToAccount(seed),
+        {private_key: mnemonicPrivateKeyAin.toString('hex'), public_key: mnemonicPublicKeyAin.toString('hex'), address: mnemonicAddressAin})
+  })
+})
+
+describe('seedToPrivatekey with ETH', function() {
+  it('should get the corresponding private key', function() {
+    assert.deepEqual(utils.seedToPrivatekey(seed, 0, 'ETH'), mnemonicPrivateKeyEth);
+  })
+})
+
+describe('seedToAccount with ETH', function() {
+  it('should get the corresponding account', function() {
+    assert.deepEqual(utils.seedToAccount(seed, 0, 'ETH'),
+        {private_key: mnemonicPrivateKeyEth.toString('hex'), public_key: mnemonicPublicKeyEth.toString('hex'), address: mnemonicAddressEth})
   })
 })
 
