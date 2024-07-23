@@ -429,6 +429,37 @@ export const privateToAccount = function(privateKey: Buffer): Account {
 }
 
 /**
+ * Returns an private key with the given seed.
+ * @param {Buffer} seed
+ * @param {number} index of the account
+ * @param {string} chain to use the derivation path of
+ * @return {Buffer}
+ */
+export const seedToPrivatekey = function(seed: Buffer, index: number = 0, chain: string = 'AIN'): Buffer {
+  if (index < 0) {
+    throw new Error('[ain-util] seedToPrivatekey: index should be greater than 0');
+  }
+
+  const hdkey = HDkey.fromMasterSeed(seed);
+  const prefix = chain === 'ETH' ? ETH_HD_DERIVATION_PATH : AIN_HD_DERIVATION_PATH;
+  const path = prefix + index;
+  const wallet = hdkey.derive(path);
+
+  return wallet.privateKey;
+}
+
+/**
+ * Returns an Account with the given seed.
+ * @param {Buffer} seed
+ * @param {number} index of the account
+ * @param {string} chain to use the derivation path of
+ * @return {Account}
+ */
+export const seedToAccount = function(seed: Buffer, index: number = 0, chain: string = 'AIN'): Account {
+  return privateToAccount(seedToPrivatekey(seed, index, chain));
+}
+
+/**
  * Returns a randomly generated mnemonic.
  * @return {string}
  */
@@ -451,12 +482,8 @@ export const mnemonicToPrivatekey = function(mnemonic: string, index: number = 0
   }
 
   const seed = mnemonicToSeedSync(mnemonic);
-  const hdkey = HDkey.fromMasterSeed(seed);
-  const prefix = chain === 'ETH' ? ETH_HD_DERIVATION_PATH : AIN_HD_DERIVATION_PATH;
-  const path = prefix + index;
-  const wallet = hdkey.derive(path);
 
-  return wallet.privateKey;
+  return seedToPrivatekey(seed, index, chain);
 }
 
 /**
