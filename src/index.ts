@@ -416,7 +416,7 @@ export const privateToAddress = function(privateKey: Buffer): string {
 }
 
 /**
- * Returns an Account with the given private key.
+ * Returns an account with the given private key.
  * @param {Buffer} privateKey
  * @return {Account}
  */
@@ -429,7 +429,7 @@ export const privateToAccount = function(privateKey: Buffer): Account {
 }
 
 /**
- * Returns an private key with the given seed.
+ * Returns a private key with the given seed.
  * @param {Buffer} seed
  * @param {number} index of the account
  * @param {string} chain to use the derivation path of
@@ -449,7 +449,7 @@ export const seedToPrivatekey = function(seed: Buffer, index: number = 0, chain:
 }
 
 /**
- * Returns an Account with the given seed.
+ * Returns an account with the given seed.
  * @param {Buffer} seed
  * @param {number} index of the account
  * @param {string} chain to use the derivation path of
@@ -466,7 +466,7 @@ export const seedToAccount = function(seed: Buffer, index: number = 0, chain: st
 export { generateMnemonic } from 'bip39';
 
 /**
- * Returns an private key with the given mnemonic.
+ * Returns a private key with the given mnemonic.
  * @param {string} mnemonic
  * @param {number} index of the account
  * @param {string} chain to use the derivation path of
@@ -487,7 +487,7 @@ export const mnemonicToPrivatekey = function(mnemonic: string, index: number = 0
 }
 
 /**
- * Returns an Account with the given mnemonic.
+ * Returns an account with the given mnemonic.
  * @param {string} mnemonic
  * @param {number} index of the account
  * @param {string} chain to use the derivation path of
